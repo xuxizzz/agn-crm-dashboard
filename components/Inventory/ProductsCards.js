@@ -1,40 +1,43 @@
 export function ProductsCards({ title, sold, lastBought, icon }) {
-  // Format date to "09 Feb 2026"
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+  const PRODUCT_STYLE = {
+    "Inmarsat Phones": { icon: "📞", bg: "#e2d9ec" },
+    "Iridium 9555": { icon: "📱", bg: "#cdd5ee" },
+    "Iridium 9575": { icon: "📱", bg: "#b1cbd3" },
+    "Others": { icon: "📦", bg: "#eee9d4" }
   };
 
-  // Determine background color based on product type
-  let bgColor = '#EEF2FF'; // default blue
-  if (title.includes('Inmarsat')) {
-    bgColor = '#FAF5FF'; // purple
-  } else if (title.includes('Two-Way') || title.includes('Radio')) {
-    bgColor = '#FEF3C7'; // yellow
-  }
-  
+  const style = PRODUCT_STYLE[title] || { icon: "📦", bg: "#EEF2FF" };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
   return `
-    <div class="product-card" style="background-color: ${bgColor};">
+    <div class="product-card" style="background-color: ${style.bg};">
       <div class="product-card-body">
-        <div class="product-icon">${icon || '📱'}</div>
+        <div class="product-icon">${style.icon}</div>
 
         <div class="product-details">
           <h3 class="product-title">${title}</h3>
           <div class="product-sold">
             <span class="product-value">${sold}</span>
-            <span class="sold-label">sold</span>  
-          </div>        
+            <span class="sold-label">sold</span>
+          </div>
         </div>
       </div>
-      
+
       <div class="product-card-footer">
         <div class="last-bought">
           <span class="last-bought-icon">📈</span>
-          <span class="last-bought-text">Last bought on: <strong>${formatDate(lastBought)}</strong></span>
+          <span class="last-bought-text">
+            Last bought on: <strong>${formatDate(lastBought)}</strong>
+          </span>
         </div>
       </div>
     </div>

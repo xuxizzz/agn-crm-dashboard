@@ -5,27 +5,67 @@ import { LoadsCards } from "../components/Inventory/LoadsCards.js";
 import { InventoryStocks } from "../components/Inventory/InventoryStocks.js";
 import { InventoryActivityLog } from "../components/Inventory/InventoryActivityLog.js";
 
-export function Inventory() {
-  const products = [
-    { title: "Iridium Phones", sold: "45", icon: "📱", lastBought: "2026-02-15" },
-    { title: "Inmarsat Phones", sold: "32", icon: "📞", lastBought: "2026-02-10" },
-    { title: "Two-Way Radios", sold: "78", icon: "📻", lastBought: "2026-02-12" },
-  ];
+export async function Inventory() {
+  console.log("Inventory render start");
+  let products = [];
+  let loads = [];
 
-  const loads = [
-    { title: "Iridium Loads", 
-      load1: "100 Minutes", sold1: 120, active1: 80, expiring1: 20, 
-      load2: "350 Minutes", sold2: 150, active2: 100, expiring2: 30, 
-      load3: "500 Minutes", sold3: 200, active3: 150, expiring3: 50 },
-    { title: "Inmarsat Loads", 
-      load1: "100 Units", sold1: 90, active1: 60, expiring1: 15, 
-      load2: "350 Units", sold2: 110, active2: 70, expiring2: 25, 
-      load3: "500 Units", sold3: 130, active3: 90, expiring3: 35 },
-  ];
+  try {
+    const res = await fetch(
+  "https://interns.srv1335246.hstgr.cloud/webhook-test/inventory"
+);
 
+const raw = await res.json();
+const data = Array.isArray(raw) ? raw[0] : raw;
+
+
+    /* ===============================
+       MAP PHYSICAL PRODUCTS
+       =============================== */
+    products = data.physicalProducts.map(p => ({
+      title: p.name,
+      sold: String(p.sold ?? 0),
+      icon: "📦", // UI decision
+      lastBought: p.lastBought || "—"
+    }));
+
+    /* ===============================
+       MAP LOADS (IRIDIUM + INMARSAT)
+       =============================== */
+    function mapLoads(title, sourceLoads) {
+      return {
+        title,
+        load1: sourceLoads[0]?.label || "",
+        sold1: sourceLoads[0]?.sold || 0,
+        active1: sourceLoads[0]?.active || 0,
+        expiring1: sourceLoads[0]?.expiring || 0,
+
+        load2: sourceLoads[1]?.label || "",
+        sold2: sourceLoads[1]?.sold || 0,
+        active2: sourceLoads[1]?.active || 0,
+        expiring2: sourceLoads[1]?.expiring || 0,
+
+        load3: sourceLoads[2]?.label || "",
+        sold3: sourceLoads[2]?.sold || 0,
+        active3: sourceLoads[2]?.active || 0,
+        expiring3: sourceLoads[2]?.expiring || 0
+      };
+    }
+
+    loads = [
+      mapLoads("Iridium Loads", data.loads.iridium || []),
+      mapLoads("Inmarsat Loads", data.loads.inmarsat || [])
+    ];
+
+  } catch (err) {
+    console.error("Failed to load inventory dashboard", err);
+  }
   return `
     <section class="page">
-      ${ContentHeader("Inventory", "Real-time visibility into available stocks and consumables")}
+      ${ContentHeader(
+        "Inventory",
+        "Real-time visibility into available stocks and consumables"
+      )}
 
       <h4>📦 Physical Products</h4>
       <div class="products-grid">
@@ -41,8 +81,12 @@ export function Inventory() {
         <div class="inventory-header">
           <h4 id="inventory-title">Inventory Stocks</h4>
           <div class="tab-buttons">
-            <button class="tab-btn active" data-table="movement">Product Stocks</button>
-            <button class="tab-btn" data-table="transactions">Inventory Logs</button>
+            <button class="tab-btn active" data-table="movement">
+              Product Stocks
+            </button>
+            <button class="tab-btn" data-table="transactions">
+              Inventory Logs
+            </button>
           </div>
         </div>
         
@@ -58,6 +102,7 @@ export function Inventory() {
       ${QuickActions()}
     </section>
   `;
+  
 }
 
 /* ✅ Run AFTER rendering into DOM */
@@ -84,7 +129,8 @@ export function initInventory() {
         title.textContent = 'Physical Products – Current Stock';
       }
     });
-  });
+  })
+  ;
 
   initQuickActions();
 }
